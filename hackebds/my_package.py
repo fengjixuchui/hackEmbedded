@@ -4,10 +4,13 @@ import random
 import string
 from os import path
 import subprocess
+from subprocess import PIPE
 import tempfile
 from pwn import context,log,sleep,pwnlib
 from pwnlib import atexit
 import re
+import platform
+from . import model_choise
 
 chars = string.ascii_letters
 
@@ -33,7 +36,7 @@ def spaceReplace(i):
 def get_envir_args(envp):
 	return remove_null(spaceReplace(envp))
 
-
+ 
 
 def my_make_elf(code , filename=None,vma= None,shared=False, strip=None,extract=None):
 	assembler = pwnlib.asm._assembler()
@@ -134,7 +137,9 @@ def my_bfdname():
         's390'    : 'elf%d-s390' % context.bits,
         'sparc'   : 'elf32-sparc',
         'sparc64' : 'elf64-sparc',
-        'loongarch64' : None
+        'loongarch64' : None ,
+        'mipsn32' : None,
+		'mipsn32el' : None
     }
 
     if arch in bfdnames:
@@ -163,10 +168,9 @@ def my_linker():
 
 
 
-def my_make_loongarch64_elf(code , filename=None,vma= None,shared=False, strip=None,extract=None):
+def my_make_add_arch_elf(code , filename=None,vma= None,shared=False, strip=None,extract=None):
 	assembler = pwnlib.asm._assembler()
 	linker    = my_linker()
-	print(assembler,linker)
 	log.debug("Building ELF:\n")
 	tmpdir= tempfile.mkdtemp(prefix = 'pwn-asm-')
 	step1 = path.join(tmpdir, 'step1-asm')
@@ -214,3 +218,154 @@ def my_make_loongarch64_elf(code , filename=None,vma= None,shared=False, strip=N
 	else:
 		atexit.register(lambda: shutil.rmtree(tmpdir))
 	return retval
+
+
+def check_root():
+	if(os.getuid() == 0):
+		return True
+	else:
+		return False
+
+def check_mipsn32_envir():
+	matter_path = os.path.expanduser('~')
+	with open(matter_path+"/.bashrc", "r") as f:
+		data = f.read()
+	if("export PATH=$PATH:/tmp/mipsn32_binutils" in data):
+		return 1
+	else:
+		return 2
+
+
+def get_mipsn32_binutils(context_arch):
+	if(platform.system()== "Linux"):
+		log.success("checking and installing mipsn32 cross tool")
+		if(context.arch == "mipsn32"):
+			try:
+				if(os.path.exists("/usr/bin/mipsn32-linux-gnu-as") == True):
+					try:
+						cmd_out = subprocess.Popen(['readelf','-h', "/usr/bin/mipsn32-linux-gnu-as"], shell=False, stdout=PIPE, stderr = PIPE).stderr.read()
+						if cmd_out != b"":
+							if(check_root() == True):
+								subprocess.check_output(["wget", "-O", "/usr/bin/mipsn32-linux-gnu-as", "-T", "10", "-t", "3","https://github.com/doudoudedi/hackEmbedded/raw/main/cross-tools/mipsn32-linux-gnu-as"],shell=False)
+								os.system("chmod 111 /usr/bin/mipsn32-linux-gnu-as")#;chmod +x /usr/bin/mipsn32-linux-gnu-ld;chmod +x /usr/bin/mipsn32el-linux-gnu-ld;chmod +x /usr/bin/mipsn32el-linux-gnu-as")
+
+							else:
+								log.info("root user is required")
+								return 1
+							log.success("mipsn32-linux-gnu-as download success")
+					except:
+						log.info("please install readelf")
+						return 1
+				else:
+					if(check_root() == True):
+						subprocess.check_output(["wget", "-O", "/usr/bin/mipsn32-linux-gnu-as", "-T", "10", "-t", "3","https://github.com/doudoudedi/hackEmbedded/raw/main/cross-tools/mipsn32-linux-gnu-as"],shell=False)
+						os.system("chmod 111 /usr/bin/mipsn32-linux-gnu-as")
+					else:
+						log.info("root user is required")
+						return 1
+					log.success("mipsn32-linux-gnu-as download success")
+			except:
+				log.info("check your netwrok or download https://github.com/doudoudedi/hackEmbedded/tree/main/cross-tools")
+				return 1
+		
+		#mipsn32_ld = subprocess.check_call
+			try:
+				if(os.path.exists("/usr/bin/mipsn32-linux-gnu-ld") == True):
+					try:
+						cmd_out = subprocess.Popen(['readelf','-h', "/usr/bin/mipsn32-linux-gnu-ld"], shell=False, stdout=PIPE, stderr = PIPE).stderr.read()
+						if cmd_out != b"":
+							if(check_root() == True):
+								subprocess.check_output(["wget", "-O", "/usr/bin/mipsn32-linux-gnu-ld", "-T", "10", "-t", "3","https://github.com/doudoudedi/hackEmbedded/raw/main/cross-tools/mipsn32-linux-gnu-ld"],shell=False)
+								os.system("chmod 111 /usr/bin/mipsn32-linux-gnu-ld")#;chmod +x /usr/bin/mipsn32el-linux-gnu-ld;chmod +x /usr/bin/mipsn32el-linux-gnu-as")
+
+							else:
+								log.info("root user is required")
+								return 1	
+							log.success("mipsn32-linux-gnu-ld download success")
+					except:
+						log.info("please install readelf")
+						return 1
+				else:
+					if(check_root() == True):
+						subprocess.check_output(["wget", "-O", "/usr/bin/mipsn32-linux-gnu-ld", "-T", "10", "-t", "3","https://github.com/doudoudedi/hackEmbedded/raw/main/cross-tools/mipsn32-linux-gnu-ld"],shell=False)
+						os.system("chmod 111 /usr/bin/mipsn32-linux-gnu-ld")
+					else:
+						log.info("root user is required")
+						return 1
+					log.success("mipsn32-linux-gnu-as download success")
+			except:
+				log.info("check your netwrok or download https://github.com/doudoudedi/hackEmbedded/tree/main/cross-tools")
+				return 1
+
+			log.success("mipsn32 corss-tool is ready")
+		else:
+		
+			try:
+				if(os.path.exists("/usr/bin/mipsn32el-linux-gnu-ld") == True):
+					try:
+						cmd_out = subprocess.Popen(['readelf','-h', "/usr/bin/mipsn32el-linux-gnu-ld"], shell=False, stdout=PIPE, stderr = PIPE).stderr.read()
+						if cmd_out != b"":
+							if(check_root() == True):
+								subprocess.check_output(["wget", "-O", "/usr/bin/mipsn32el-linux-gnu-ld", "-T", "10", "-t", "3","https://github.com/doudoudedi/hackEmbedded/raw/main/cross-tools/mipsn32-linux-gnu-ldel"],shell=False)
+								os.system("chmod 111 /usr/bin/mipsn32el-linux-gnu-ld")#;chmod +x /usr/bin/mipsn32el-linux-gnu-as")
+							else:
+								log.info("root user is required")
+								return 1	
+							log.success("mipsn32el-linux-gnu-ld download success")
+					except:
+						log.info("please install readelf")
+						return 1
+				else:
+					if(check_root() == True):
+						subprocess.check_output(["wget", "-O", "/usr/bin/mipsn32el-linux-gnu-ld", "-T", "10", "-t", "3","https://github.com/doudoudedi/hackEmbedded/raw/main/cross-tools/mipsn32el-linux-gnu-ld"],shell=False)
+						os.system("chmod 111 /usr/bin/mipsn32el-linux-gnu-ld")
+					else:
+						log.info("root user is required")
+						return 1
+					log.success("mipsn32-linux-gnu-as download success")
+			except:
+				log.info("check your netwrok or download https://github.com/doudoudedi/hackEmbedded/tree/main/cross-tools")
+				return 1
+			try:
+				if(os.path.exists("/usr/bin/mipsn32el-linux-gnu-as") == True):
+					try:
+						cmd_out = subprocess.Popen(['readelf','-h', "/usr/bin/mipsn32el-linux-gnu-as"], shell=False, stdout=PIPE, stderr = PIPE).stderr.read()
+						if cmd_out != b"":
+							if(check_root() == True):
+								subprocess.check_output(["wget", "-O", "/usr/bin/mipsn32el-linux-gnu-as", "-T", "10", "-t", "3","https://github.com/doudoudedi/hackEmbedded/raw/main/cross-tools/mipsn32el-linux-gnu-as"],shell=False)
+								os.system("chmod 111 /usr/bin/mipsn32el-linux-gnu-as")
+							else:
+								log.info("root user is required")
+								return 1
+							log.success("mipsn32el-linux-gnu-as download success")
+					except:
+						log.info("please install readelf")
+						return 1
+				else:
+					if(check_root() == True):
+						subprocess.check_output(["wget", "-O", "/usr/bin/mipsn32el-linux-gnu-as", "-T", "10", "-t", "3","https://github.com/doudoudedi/hackEmbedded/raw/main/cross-tools/mipsn32el-linux-gnu-as"],shell=False)
+						os.system("chmod 111 /usr/bin/mipsn32el-linux-gnu-as")
+					else:
+						log.info("root user is required")
+						return 1
+					log.success("mipsn32el-linux-gnu-as download success")
+			except:
+				log.info("check your netwrok or download https://github.com/doudoudedi/hackEmbedded/tree/main/cross-tools")
+				return 1
+			log.success("mipsn32el cross tool is ready")
+
+		#subprocess.Popen("mv","./mipsn32-linux-gnu-as","/usr/bin")
+		if(check_root() == True):
+			if(os.path.exists("/tmp/mipsn32_binutils")==False and check_mipsn32_envir()==2):
+				try:
+					os.system("mkdir -p /tmp/mipsn32_binutils;cp /usr/bin/mipsn32-linux-gnu-as /tmp/mipsn32_binutils;cp /usr/bin/mipsn32-linux-gnu-ld /tmp/mipsn32_binutils;cp /usr/bin/mipsn32el-linux-gnu-as /tmp/mipsn32_binutils;cp /usr/bin/mipsn32el-linux-gnu-ld /tmp/mipsn32_binutils")
+					os.system("echo \"export PATH=\$PATH:/tmp/mipsn32_binutils\" >> ~/.bashrc")
+					log.success("mipsn32_binutils write environment variable succeeded ")
+				except:
+					log.info("mipsn32_binutils write environment variable faild ")
+				
+
+	else:
+		log.info("Insufficient permissions(need root) or not linux operating system")
+		return 1
+
